@@ -6,10 +6,17 @@ import { Link } from 'react-router-dom'
 
 const Landing = () => {
   useEffect(() => {
-    const fetchUser = () => {
-      const response = axios.get('http://localhost:3001/auth/home')
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token')
+      const response = await axios.get('http://localhost:3001/auth/home',{
       
-    }
+      headers: {
+        "Authorization" : `Bearer ${token}` 
+      }
+    })
+    console.log(response)
+  }
+  fetchUser()
   }, [])
   return (
     <div>

@@ -17,13 +17,13 @@ router.post('/signup',async (req,res) => {
 
         const hashPassword = await bcrypt.hash(password, 10)
         await db.query("INSERT INTO usert (username, email, password) VALUES (?, ?, ?)",[username, email, hashPassword])
-        res.status(201).json({message: "user created successfully"})
+        return res.status(201).json({message: "user created successfully"})
     } catch (err) {
-        res.status(500).json(err)
+        return res.status(500).json(err)
     }
 })
 
-router.post('/login',async (req,res) => {
+router.post('/login', async (req,res) => {
     const {email, password} = req.body;
     try{
         const db = await connectToDatabase()
@@ -44,5 +44,32 @@ router.post('/login',async (req,res) => {
     }
 })
 
+const verifyToken = (req, res, next) => {
+    try {
+        const token = req.headers['athorizarion'].split('')[1];
+        if (!token) {
+            return res.status(403).json({message: 'ntp'})
+        }
+        const decoded = jwt.verify(token, process.env.JWT_KEY)
+        req.userId = decoded.id;
+        next()
+    } catch (err) {
+        return res.status(500).json({message: "server error"})
+    }
+}
+
+router.get('/landing', verifyToken, async (req, res) => {
+    try {
+        const db = await connectToDatabase()
+        const [rows] = await db.query('SELECT * FORM usert WHERE id = ?', [req.userId])
+        if(rows.length === 0) {
+            return res.status(404).json({message: "une"})
+        }
+
+        return res.status(201).json({user: rows[0]})
+    } catch (err) {
+        return res.status(500).json({message: "server error"})
+    }
+})
 
 export default router;
